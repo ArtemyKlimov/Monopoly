@@ -1,0 +1,16 @@
+/**
+ * Created by Artemy on 06.01.2018.
+ */
+public enum TileType {
+    PROPERTY_VERTICAL_RIGHT,
+    PROPERTY_VERTICAL_LEFT,
+    PROPERTY_HORIZONTAL_TOP,
+    PROPERTY_HORIZONTAL_BOTTOM,
+    DICE_TILE,
+    START_TILE,
+    INCOME,
+    STOCK_EXCHANGE,
+    PRISON,
+    CHANCE,
+    INSPECTION
+}
