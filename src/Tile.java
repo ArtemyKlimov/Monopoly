@@ -8,7 +8,6 @@ import java.awt.image.BufferedImage;
  */
 public abstract class Tile extends JLayeredPane {
 
-
     protected String title = null;
     protected JLabel backgroundLabel;
     protected JLabel titleLabel;
@@ -18,10 +17,8 @@ public abstract class Tile extends JLayeredPane {
     protected ImageIcon img;
     protected int xPosition;
     protected int yPosition;
-    private BufferedImage backImage;
 
     public Tile(String title, String image, TileType tileType, int xPosition, int yPosition) {
-        // super(title);
         titleLabel = new JLabel(title);
         backgroundLabel = new JLabel();
         playersLayer = new JPanel();
@@ -32,12 +29,10 @@ public abstract class Tile extends JLayeredPane {
         this.img = new ImageIcon(image);
         this.backgroundLabel.setIcon(img);
         playersLayer.setBounds(0,0,69,89);
-        //titleLabel.setBounds(2, 2, 66, 86);
         playersLayer.setOpaque(false);
         this.add(backgroundLabel, new Integer(0));
         //this.add(titleLabel, new Integer(1));
         this.add(playersLayer, new Integer(2));
-
 
         this.xPosition = xPosition;
         this.yPosition = yPosition;
@@ -50,7 +45,6 @@ public abstract class Tile extends JLayeredPane {
     public ImageIcon getIcon() {
         return img;
     }
-
 
     public int getYPosition() {
         return yPosition;

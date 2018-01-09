@@ -15,6 +15,8 @@ public class Game extends JFrame {
     JTextField dice2 = null;
     JButton nextTurn = null;
     JPanel gamePanel = null;
+    JLabel playerName = null;
+    JPanel throwDime = null;
     volatile ArrayList<Tile> tiles;
     ArrayList<Player> players;
     static Game game;
@@ -53,7 +55,7 @@ public class Game extends JFrame {
         setSize(1070, 680);
 
         setLocationRelativeTo(null);
-        setResizable(false);
+       // setResizable(false);
         gamePanel = new JPanel();
 
 
@@ -75,7 +77,6 @@ public class Game extends JFrame {
     }
 
     public int throwDice(){
-
         long t = System.currentTimeMillis();
         long end = t+3000;
         dice1 = new JTextField();
@@ -94,8 +95,6 @@ public class Game extends JFrame {
   //      }
         return num1 + num2;
     }
-
-
 
     public void movePlayer(Player player, int steps) {
         new Thread(new Runnable() {
@@ -124,6 +123,8 @@ public class Game extends JFrame {
                 player.getScoreInfo().setText(String.valueOf(player.getScore()));
                 player.addPropery(tiles.get(player.getLocation()));
                 player.refreshPropertyInfo();
+                playerName.repaint();
+                playerName.revalidate();
             }
         }).start();
 
@@ -147,13 +148,19 @@ public class Game extends JFrame {
             c.gridy = t.getYPosition();
             gamePanel.add(t, c);
         }
-        JLabel mainFrame = new JLabel();
-        ImageIcon icon = new ImageIcon("img\\monopoly5.jpg");
-        mainFrame.setIcon(icon);
-        c.gridx = 1;
-        c.gridy = 1;
-        c.gridwidth = 10;
-        c.gridheight = 6;
+        c.gridx = 0;
+        c.gridy = 0;
+        MainPanel mainFrame = new MainPanel("img\\mnpl.jpg");
+      //  MainPanel JLabel = new JLabel();
+      //  gamePanel.add(mainFrame, c);
+      //  ImageIcon icon = new ImageIcon("img\\mnpl.jpg");
+      //  mainFrame.setIcon(icon);
+        playerName = mainFrame.getPlayerName();
+        throwDime = mainFrame.getThrowDime();
+//        c.gridx = 1;
+//        c.gridy = 1;
+//        c.gridwidth = 10;
+//        c.gridheight = 6;
         gamePanel.add(mainFrame, c);
         return gamePanel;
     }

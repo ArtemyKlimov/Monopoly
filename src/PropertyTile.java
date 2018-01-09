@@ -37,7 +37,7 @@ public class PropertyTile extends Tile {
     public void useAbility(Player player) {
         if ((this.owner != null) && (!player.equals(this.owner))) {
             player.addScore(rent_lvl_1 * (-1));
-            System.out.println("Вы попали клетку другого игрока. Штраф " +  rent_lvl_1 * (-1));
+            System.out.println("Вы попали на клетку другого игрока. Штраф " +  rent_lvl_1 * (-1));
         } else {
             player.addScore(rent_lvl_2 * (-1));
         }

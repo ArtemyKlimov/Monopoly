@@ -1,94 +1,88 @@
-/**
- * Created by Artemy on 06.01.2018.
- */
 import java.awt.*;
-import javax.swing.JButton;
-import javax.swing.JFrame;
+import java.awt.event.*;
+import javax.swing.*;
 
 public class GridBagLayoutDemo {
-    final static boolean shouldFill = true;
-    final static boolean shouldWeightX = true;
-    final static boolean RIGHT_TO_LEFT = false;
+    private JFrame mainFrame;
+    private JLabel headerLabel;
+    private JLabel statusLabel;
+    private JPanel controlPanel;
 
-    public static void addComponentsToPane(Container pane) {
-        if (RIGHT_TO_LEFT) {
-            pane.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
-        }
-
-        JButton button;
-        pane.setLayout(new GridBagLayout());
-        GridBagConstraints c = new GridBagConstraints();
-
-        if (shouldFill) {
-            // натуральная высота, максимальная ширина
-            c.fill = GridBagConstraints.HORIZONTAL;
-        }
-
-        button = new JButton("Button 1");
-
-        if (shouldWeightX) {
-            c.weightx = 0.5;
-        }
-
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.gridx = 0;
-        c.gridy = 0;
-        pane.add(button, c);
-
-        button = new JButton("Button 2");
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.weightx = 0.5;
-        c.gridx = 1;
-        c.gridy = 0;
-        pane.add(button, c);
-
-        button = new JButton("Button 3");
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.weightx = 0.5;
-        c.gridx = 2;
-        c.gridy = 0;
-        pane.add(button, c);
-
-        button = new JButton("Long-Named Button 4");
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.ipady = 40;      // сделать эту кнопку высокой
-        c.weightx = 0.0;
-        c.gridwidth = 3;
-        c.gridx = 0;
-        c.gridy = 1;
-        pane.add(button, c);
-
-        button = new JButton("5");
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.ipady = 0;       // установить первоночальный размер кнопки
-        c.weighty = 1.0;   // установить отступ
-        c.anchor = GridBagConstraints.PAGE_END; // установить кнопку в конец окна
-        c.insets = new Insets(10, 0, 0, 0);  // поставить заглушку
-        c.gridx = 1;       // выравнять компонент по Button 2
-        c.gridwidth = 2;   // установить в 2 колонку
-        c.gridy = 2;       // и 3 столбец
-        pane.add(button, c);
-
+    public GridBagLayoutDemo(){
+        prepareGUI();
     }
-
-    private static void createAndShowGUI() {
-        // Создание окна
-        JFrame frame = new JFrame("GridBagLayoutDemo");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        // Установить панель содержания
-        addComponentsToPane(frame.getContentPane());
-
-        // Показать окно
-        frame.pack();
-        frame.setVisible(true);
+    public static void main(String[] args){
+        GridBagLayoutDemo  swingControlDemo = new GridBagLayoutDemo();
+        swingControlDemo.showDialogDemo();
     }
+    private void prepareGUI(){
+        mainFrame = new JFrame("Java Swing Examples");
+        mainFrame.setSize(400,400);
+        mainFrame.setLayout(new GridLayout(3, 1));
 
-    public static void main(String[] args) {
-        javax.swing.SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                createAndShowGUI();
+        mainFrame.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent windowEvent){
+                System.exit(0);
             }
         });
+        headerLabel = new JLabel("", JLabel.CENTER);
+        statusLabel = new JLabel("",JLabel.CENTER);
+        statusLabel.setSize(350,100);
+
+        controlPanel = new JPanel();
+        controlPanel.setLayout(new FlowLayout());
+
+        mainFrame.add(headerLabel);
+        mainFrame.add(controlPanel);
+        mainFrame.add(statusLabel);
+        mainFrame.setVisible(true);
+    }
+    private void showDialogDemo(){
+        headerLabel.setText("Control in action: JOptionPane");
+
+        JButton okButton = new JButton("OK");
+        JButton javaButton = new JButton("Yes/No");
+        JButton cancelButton = new JButton("Yes/No/Cancel");
+
+        okButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                JOptionPane.showMessageDialog(mainFrame, "Welcome to TutorialsPoint.com");
+            }
+        });
+        javaButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                int output = JOptionPane.showConfirmDialog(mainFrame
+                        , "Click any button"
+                        ,"TutorialsPoint.com"
+                        ,JOptionPane.YES_NO_OPTION);
+
+                if(output == JOptionPane.YES_OPTION){
+                    statusLabel.setText("Yes selected.");
+                } else if(output == JOptionPane.NO_OPTION){
+                    statusLabel.setText("No selected.");
+                }
+            }
+        });
+        cancelButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                int output = JOptionPane.showConfirmDialog(mainFrame
+                        , "Click any button"
+                        ,"TutorialsPoint.com"
+                        ,JOptionPane.YES_NO_CANCEL_OPTION,
+                        JOptionPane.INFORMATION_MESSAGE);
+
+                if(output == JOptionPane.YES_OPTION){
+                    statusLabel.setText("Yes selected.");
+                } else if(output == JOptionPane.NO_OPTION){
+                    statusLabel.setText("No selected.");
+                } else if(output == JOptionPane.CANCEL_OPTION){
+                    statusLabel.setText("Cancel selected.");
+                }
+            }
+        });
+        controlPanel.add(okButton);
+        controlPanel.add(javaButton);
+        controlPanel.add(cancelButton);
+        mainFrame.setVisible(true);
     }
 }
