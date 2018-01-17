@@ -12,5 +12,6 @@ public enum TileType {
     STOCK_EXCHANGE,
     PRISON,
     CHANCE,
-    INSPECTION
+    INSPECTION,
+    PRIZE
 }

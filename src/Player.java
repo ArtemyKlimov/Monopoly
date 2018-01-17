@@ -15,6 +15,16 @@ public class Player {
     private JLabel playerLabel = null;
     private ArrayList<Tile> properties;
     private JLabel scoreInfo = null;
+    private boolean inJail = false;
+
+    public boolean isInJail() {
+        return inJail;
+    }
+
+    public void setInJail(boolean inJail) {
+        this.inJail = inJail;
+    }
+
     private JPanel propertyInfo = null;
 
     public void setPropertyInfo(JPanel propertyInfo) {

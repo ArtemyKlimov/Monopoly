@@ -1,7 +1,6 @@
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
-import java.awt.image.BufferedImage;
 
 /**
  * Created by Artemy on 06.01.2018.
@@ -84,6 +83,5 @@ public abstract class Tile extends JLayeredPane {
     }
 
     public abstract void initTileContent(String image);
-    public abstract void useAbility(Player player);
-    public abstract void setOwner(Player player);
+    public abstract String useAbility(Player player, MainPanel mainPanel, Monitor monitor);
 }

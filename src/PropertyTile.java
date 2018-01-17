@@ -9,6 +9,7 @@ public class PropertyTile extends Tile {
     int price;
     private Player owner;
     protected Industry industry;
+    //private static final Object monitor = new Object();
     int rent_lvl_1;
     int rent_lvl_2;
     int rent_lvl_3;
@@ -34,13 +35,43 @@ public class PropertyTile extends Tile {
         initTileContent(image);
     }
 
-    public void useAbility(Player player) {
-        if ((this.owner != null) && (!player.equals(this.owner))) {
+    public String useAbility(Player player, MainPanel mainPanel, Monitor monitor) {
+        String result;
+        boolean choice  = false;
+        if ((this.owner != null) && (!player.equals(this.owner))) { //если клетка принадлежит другому игроку
             player.addScore(rent_lvl_1 * (-1));
-            System.out.println("Вы попали на клетку другого игрока. Штраф " +  rent_lvl_1 * (-1));
-        } else {
-            player.addScore(rent_lvl_2 * (-1));
+            result =  "Вы попали на клетку другого игрока. Штраф " +  rent_lvl_1 * (-1);
+            mainPanel.getResultLabel().setText(result);
+
+        } else {  //если клетка никому не принадлежит
+            result = "Вы попали на клетку " + this.getTitle() + " Желаете купить ее ?";
+            mainPanel.getResultLabel().setText(result);
+          //  System.out.println(result);
+           // player.addScore(rent_lvl_2 * (-1));
+            mainPanel.setChoicePanel("Купить", "В другой раз");
+            synchronized (monitor) {
+                System.out.println("monitor startet");
+                try {
+                    monitor.wait();
+                }catch (InterruptedException ie) {
+                    ie.printStackTrace();
+                }
+            }
+            System.out.println("monitor ended");
+            if (monitor.getResult()) {
+                System.out.println("YYYYYYYYYYYYYYYYYYYYYEEEEEEEEEEESSSSS");
+                this.setOwner(player);
+                int cost = price * -1;
+                player.addScore(cost);
+                player.addPropery(this);
+
+            }
+            player.getScoreInfo().setText(String.valueOf(player.getScore()));
+            player.refreshPropertyInfo();
+
         }
+
+        return result;
     }
 
     public Player getOwner() {
@@ -49,7 +80,7 @@ public class PropertyTile extends Tile {
 
     public void setOwner(Player player) {
         this.owner = player;
-        Border border = BorderFactory.createLineBorder(player.getColor(), 2);
+        Border border = BorderFactory.createLineBorder(player.getColor(), 12);
         this.setBorder(border);
     }
 

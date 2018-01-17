@@ -12,14 +12,15 @@ public class InspectionTile extends Tile {
     }
 
     @Override
-    public void useAbility(Player player) {
-
+    public String useAbility(Player player, MainPanel mainPanel, Monitor monitor) {
+        mainPanel.getResultLabel().setText("Налоговая инспекция. Заплатите по 200 с филиала");
+        int sum =  -1 * 200 * player.getProperties().size();
+        player.addScore(sum);
+        player.getScoreInfo().setText(String.valueOf(player.getScore()));
+        player.refreshPropertyInfo();
+        return null;
     }
 
-    @Override
-    public void setOwner(Player player) {
-
-    }
 
     @Override
     public void initTileContent(String image) {

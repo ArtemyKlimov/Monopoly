@@ -20,20 +20,26 @@ public class Game extends JFrame {
     volatile ArrayList<Tile> tiles;
     ArrayList<Player> players;
     static Game game;
+    static MainPanel mainFrame;
     Player currentPlayer;
+    private static final Monitor monitor = new Monitor();
+
 
     public static void main(String[] args) throws Exception{
         JLabel playerOneLabel = new JLabel();
         JLabel playerTwoLabel = new JLabel();
         JLabel playerThreeLabel = new JLabel();
+        JLabel playerFourLabel = new JLabel();
         playerOneLabel.setIcon(UIManager.getIcon("OptionPane.informationIcon"));
         playerTwoLabel.setIcon(UIManager.getIcon("OptionPane.errorIcon"));
         playerThreeLabel.setIcon(UIManager.getIcon("OptionPane.warningIcon"));
+        playerFourLabel.setIcon(UIManager.getIcon("OptionPane.questionIcon"));
 
         ArrayList<Player> playerList = new ArrayList<>();
-        playerList.add(new Player("Oleg", Color.RED, playerOneLabel, 0, 1));
-        playerList.add(new Player("Dima", Color.YELLOW, playerTwoLabel, 0, 2));
-        playerList.add(new Player("Miha", Color.GREEN, playerThreeLabel, 0, 3));
+        playerList.add(new Player("1", Color.RED, playerOneLabel, 0, 1));
+        playerList.add(new Player("2", Color.YELLOW, playerTwoLabel, 0, 2));
+        playerList.add(new Player("3", Color.GREEN, playerThreeLabel, 0, 3));
+        playerList.add(new Player("4", Color.BLUE, playerFourLabel, 0, 4));
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -55,7 +61,7 @@ public class Game extends JFrame {
         setSize(1070, 680);
 
         setLocationRelativeTo(null);
-       // setResizable(false);
+        setResizable(false);
         gamePanel = new JPanel();
 
 
@@ -74,38 +80,67 @@ public class Game extends JFrame {
             currentPlayer = players.get(0);
         else
             currentPlayer = players.get(currentPlayer.getPlayerNum());
+
+        if (currentPlayer.isInJail()) {
+            mainFrame.getResultLabel().setText("Игрок " +currentPlayer.getName() +" в тюрьме. Пропускает ход");
+            currentPlayer.setInJail(false);
+            getNextPlayer();
+        }
     }
 
-    public int throwDice(){
+    public void throwDice(){
+
         long t = System.currentTimeMillis();
-        long end = t+3000;
-        dice1 = new JTextField();
-        dice2 = new JTextField();
+        long end = t+2500;
+        Random r = new Random();
+        nextTurn.setEnabled(false);
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    int num1 = 0;
+                    int num2 = 0;
+                    try {
+                        while (System.currentTimeMillis() < end) {
+                            num1 = r.nextInt(6) + 1;
+                            num2 = r.nextInt(6) + 1;
+                            mainFrame.setDimes(num1, num2);
+                            Thread.sleep(300);
+                            game.repaint();
+                            game.revalidate();
+                        }
+                        movePlayer(currentPlayer, num1 + num2);
+//                        synchronized (monitor) {
+//                            System.out.println("monitor startet");
+//                            try {
+//                                monitor.wait();
+//                            }catch (InterruptedException ie) {
+//                                ie.printStackTrace();
+//                            }
+//                        }
 
-    //    while (System.currentTimeMillis() < end) {
 
-            Random r = new Random();
-            int num1 = r.nextInt(6) + 1;
-            int num2  =r.nextInt(6) + 1;
+                        System.out.println("throw Dice ended");
+                    }catch (InterruptedException ie) {
+                        ie.printStackTrace();
+                    }
+                }
 
-            Tile tile1 = tiles.get(tiles.size()-2);
-            Tile tile2 = tiles.get(tiles.size()-1);
-            tile1.setText(String.valueOf(num1));
-            tile2.setText(String.valueOf(num2));
-  //      }
-        return num1 + num2;
+            }).start();
+
     }
 
     public void movePlayer(Player player, int steps) {
         new Thread(new Runnable() {
             @Override
             public void run() {
+                playerName.setText(currentPlayer.getName());
                 for (int i = 0; i < steps; i++) {
                     try {
                         Thread.sleep(200);
                     }catch (InterruptedException ie) {
                         ie.printStackTrace();
                     }
+                    //System.out.println("Player makes a move ");
                     int currentTile = player.getLocation();
                     int nextTile = currentTile + 1;
                     if (nextTile == 36) {
@@ -113,21 +148,43 @@ public class Game extends JFrame {
                     }
                     tiles.get(nextTile).addPlayer(player.getPlayerLabel());
                     player.setLocation(nextTile);
-                 //   System.out.println("Player " + player.getName() + "location: " + player.getLocation());
+                    //   System.out.println("Player " + player.getName() + "location: " + player.getLocation());
                     game.repaint();
                     game.revalidate();
                 }
-
-                tiles.get(player.getLocation()).useAbility(player);
-                tiles.get(player.getLocation()).setOwner(player);
-                player.getScoreInfo().setText(String.valueOf(player.getScore()));
-                player.addPropery(tiles.get(player.getLocation()));
-                player.refreshPropertyInfo();
-                playerName.repaint();
-                playerName.revalidate();
+                String result = tiles.get(player.getLocation()).useAbility(player, mainFrame, monitor);
+                System.out.println("Move player ended");
+                nextTurn.setEnabled(true);
             }
         }).start();
 
+
+
+
+    }
+
+    public JPanel getScoreField() {
+        JPanel scorePanel = new JPanel();
+        nextTurn = new JButton("Next Turn");
+        nextTurn.addActionListener(new ActionListener(){
+            public void actionPerformed(ActionEvent e)            {
+                //mainFrame.getChoicePanel().removeAll();
+                throwDice();
+                getNextPlayer();
+            /*    System.out.println("Current player is "+ currentPlayer.getName()
+                        + " Location is: " + currentPlayer.getLocation()
+                        + " Property is: "
+                ); */
+
+                System.out.println("Next player selected");
+                for (Tile tile : currentPlayer.getProperties()) {
+                    System.out.print(tile.getTitle());
+                }
+            }
+        });
+        scorePanel.add(nextTurn);
+        scorePanel.setBackground(Color.YELLOW);
+        return scorePanel;
     }
 
     public void drawPlayers() throws Exception{
@@ -148,54 +205,48 @@ public class Game extends JFrame {
             c.gridy = t.getYPosition();
             gamePanel.add(t, c);
         }
-        c.gridx = 0;
-        c.gridy = 0;
-        MainPanel mainFrame = new MainPanel("img\\mnpl.jpg");
-      //  MainPanel JLabel = new JLabel();
-      //  gamePanel.add(mainFrame, c);
-      //  ImageIcon icon = new ImageIcon("img\\mnpl.jpg");
-      //  mainFrame.setIcon(icon);
+        mainFrame = MainPanel.initMainPanel("img\\mnpl.jpg", monitor);
         playerName = mainFrame.getPlayerName();
         throwDime = mainFrame.getThrowDime();
-//        c.gridx = 1;
-//        c.gridy = 1;
-//        c.gridwidth = 10;
-//        c.gridheight = 6;
+        c.gridx = 1;
+        c.gridy = 1;
+        c.gridwidth = 10;
+        c.gridheight = 6;
         gamePanel.add(mainFrame, c);
         return gamePanel;
     }
 
     public void initTiles() throws Exception{
         tiles.add(new StartTile("Start", null, TileType.START_TILE, 0, 0));
-        tiles.add(new ChanceTile("Приз 1500", null, TileType.PROPERTY_HORIZONTAL_TOP, 1, 0));
+        tiles.add(new ChanceTile("Приз 1500", "img\\money.jpg", TileType.PRIZE, 1, 0));
         tiles.add(new PropertyTile("adidas", "img\\adidas-logos2.jpg" , TileType.PROPERTY_HORIZONTAL_TOP, null, 2, 0, 500, 150, 300, 600));
         tiles.add(new PropertyTile("puma", null, TileType.PROPERTY_HORIZONTAL_TOP, null, 3, 0, 700, 200, 350, 700));
         tiles.add(new PropertyTile("Lacoste", "img\\Lacoste2.jpg", TileType.PROPERTY_HORIZONTAL_TOP, null, 4, 0, 900, 250, 400, 800));
         tiles.add(new ChanceTile("ШАНС", "img\\chance2.jpg", TileType.CHANCE, 5, 0));
-        tiles.add(new InspectionTile("<html>Штраф 100<br>с филиала</html>", "img\\fns3.jpg", TileType.INSPECTION, 6, 0));
+        tiles.add(new InspectionTile("<html>Штраф 200<br>с филиала</html>", "img\\fns3.jpg", TileType.INSPECTION, 6, 0));
         tiles.add(new PropertyTile("АвтоВАЗ", "img\\VAZ2.jpg", TileType.PROPERTY_HORIZONTAL_TOP, null, 7, 0, 1000, 250, 500, 900));
         tiles.add(new PropertyTile("WV", "img\\vw.jpg", TileType.PROPERTY_HORIZONTAL_TOP, null, 8, 0, 1200, 250, 500, 1000));
         tiles.add(new PropertyTile("BMW", "img\\bmw.jpg", TileType.PROPERTY_HORIZONTAL_TOP, null, 9, 0, 1500, 300, 600, 1300));
-        tiles.add(new ChanceTile("<html>Доход<br>2000</html>", "img\\Income.jpg", TileType.INCOME, 10, 0));
-        tiles.add(new StartTile("Биржа", "img\\VAZ2.jpg", TileType.START_TILE, 11, 0));
+        tiles.add(new LuckTile("<html>Доход<br>2000</html>", "img\\Income.jpg", TileType.INCOME, 10, 0, 2000));
+        tiles.add(new StartTile("Биржа", "img\\VAZ2.jpg", TileType.PRISON, 11, 0));
         tiles.add(new PropertyTile("Хилтон", "img\\VAZ2.jpg", TileType.PROPERTY_VERTICAL_RIGHT, null, 11, 1, 1800, 350, 700, 1400));
         tiles.add(new PropertyTile("Марриотт", "img\\Marriott.jpg", TileType.PROPERTY_VERTICAL_RIGHT, null, 11, 2, 2000, 350, 700, 1400));
         tiles.add(new PropertyTile("Метрополь", "img\\VAZ2.jpg", TileType.PROPERTY_VERTICAL_RIGHT, null, 11, 3, 2300, 400, 800, 1600));
         tiles.add(new PropertyTile("Мегафон", "img\\VAZ2.jpg", TileType.PROPERTY_VERTICAL_RIGHT, null, 11, 4, 2500, 400, 800, 1800));
         tiles.add(new PropertyTile("МТС", "img\\VAZ2.jpg", TileType.PROPERTY_VERTICAL_RIGHT, null, 11, 5, 2800, 450, 900, 1900));
         tiles.add(new PropertyTile("Билайн", "img\\VAZ2.jpg", TileType.PROPERTY_VERTICAL_RIGHT, null, 11, 6, 3100, 500, 1000, 2000));
-        tiles.add(new StartTile("<html>Налоговая<br>инспекция<br>Штраф 1500</html>", null, TileType.START_TILE, 11, 7));
+        tiles.add(new StartTile("<html>Налоговая<br>инспекция<br>Штраф 1500</html>", null, TileType.PRISON, 11, 7));
         tiles.add(new ChanceTile("ШАНС", "img\\chance2.jpg", TileType.CHANCE, 10, 7));
-        tiles.add(new PropertyTile("Молокозавод", "img\\VAZ2.jpg", TileType.PROPERTY_HORIZONTAL_BOTTOM, null, 9, 7, 3300, 600, 1100, 2100));
-        tiles.add(new PropertyTile("Мясокомбинат", null, TileType.PROPERTY_HORIZONTAL_BOTTOM, null, 8, 7, 3500, 650, 1200, 2200));
-        tiles.add(new PropertyTile("Хлебокомбинат", null, TileType.PROPERTY_HORIZONTAL_BOTTOM, null, 7, 7, 3700, 700, 1300, 2300));
-        tiles.add(new InspectionTile("<html>Штраф 100<br>с филиала</html>", "img\\fns3.jpg", TileType.INSPECTION, 6, 7));
-        tiles.add(new ChanceTile("<html>Доход<br>5000</html>", "img\\Income.jpg", TileType.INCOME, 5, 7));
-        tiles.add(new PropertyTile("Реал", null, TileType.PROPERTY_HORIZONTAL_BOTTOM, null, 4, 7, 4000, 750, 1400, 2400));
-        tiles.add(new PropertyTile("Милан", null, TileType.PROPERTY_HORIZONTAL_BOTTOM, null, 3, 7, 4200, 800, 1450, 2500));
-        tiles.add(new PropertyTile("Челси", null, TileType.PROPERTY_HORIZONTAL_BOTTOM, null, 2, 7, 4300, 850, 1500, 2600));
+        tiles.add(new PropertyTile("Apple", "img\\apple2.jpg", TileType.PROPERTY_HORIZONTAL_BOTTOM, null, 9, 7, 3300, 600, 1100, 2100));
+        tiles.add(new PropertyTile("Microsoft", "img\\microsoft.jpg", TileType.PROPERTY_HORIZONTAL_BOTTOM, null, 8, 7, 3500, 650, 1200, 2200));
+        tiles.add(new PropertyTile("Google","img\\google2.jpg", TileType.PROPERTY_HORIZONTAL_BOTTOM, null, 7, 7, 3700, 700, 1300, 2300));
+        tiles.add(new InspectionTile("<html>Штраф 200<br>с филиала</html>", "img\\fns3.jpg", TileType.INSPECTION, 6, 7));
+        tiles.add(new LuckTile("<html>Доход<br>3000</html>", "img\\Income.jpg", TileType.INCOME, 5, 7, 3000));
+        tiles.add(new PropertyTile("Реал", "img\\real.jpg", TileType.PROPERTY_HORIZONTAL_BOTTOM, null, 4, 7, 4000, 750, 1400, 2400));
+        tiles.add(new PropertyTile("Челси", "img\\chelsea.jpg", TileType.PROPERTY_HORIZONTAL_BOTTOM, null, 3, 7, 4200, 800, 1450, 2500));
+        tiles.add(new PropertyTile("Спартак", "img\\spartak.jpg", TileType.PROPERTY_HORIZONTAL_BOTTOM, null, 2, 7, 4300, 850, 1500, 2600));
         tiles.add(new ChanceTile("ШАНС", "img\\chance2.jpg", TileType.CHANCE, 1, 7));
-        tiles.add(new StartTile("Тюрьма", null, TileType.START_TILE, 0, 7));
+        tiles.add(new StartTile("Тюрьма", null, TileType.PRISON, 0, 7));
         tiles.add(new PropertyTile("Панам", null, TileType.PROPERTY_VERTICAL_LEFT, null, 0, 6, 4500, 900, 1550, 2700));
         tiles.add(new PropertyTile("S7 Airlines", null, TileType.PROPERTY_VERTICAL_LEFT, null, 0, 5, 4700, 950, 1600, 2750));
         tiles.add(new PropertyTile("Аэрофлот", null, TileType.PROPERTY_VERTICAL_LEFT, null, 0, 4, 4800, 1000, 1700, 2800));
@@ -252,27 +303,5 @@ public class Game extends JFrame {
         return panel;
     }
 
-    public JPanel getScoreField() {
-        JPanel scorePanel = new JPanel();
-        nextTurn = new JButton("Next Turn");
-        nextTurn.addActionListener(new ActionListener(){
-            public void actionPerformed(ActionEvent e)
-            {
-                int steps = throwDice();
-                movePlayer(currentPlayer, steps);
-                getNextPlayer();
-                System.out.println("Current player is "+ currentPlayer.getName()
-                        + " Location is: " + currentPlayer.getLocation()
-                        + " Property is: "
-                );
-                for (Tile tile : currentPlayer.getProperties()) {
-                    System.out.print(tile.getTitle());
-                }
-                System.out.print(" Средства: "+ currentPlayer.getScore());
-            }
-        });
-        scorePanel.add(nextTurn);
-        scorePanel.setBackground(Color.YELLOW);
-        return scorePanel;
-    }
+
 }
